@@ -1,0 +1,66 @@
+# Draws the release pulse of the profile README (pulse-dark.svg, pulse-light.svg) from the public GitHub API
+# and publishes it to the branch "output", which the README loads from raw.githubusercontent.com.
+# The images carry no date of their own: the branch only changes when a release or a lane changes.
+# Third-party code: actions/checkout only, pinned to a full commit SHA. No secrets: the job uses the
+# repository's own GITHUB_TOKEN, with write access to contents only.
+name: Release pulse
+
+on:
+  schedule:
+    - cron: "17 3 * * *"  # every day at 03:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-pulse
+  cancel-in-progress: false
+
+jobs:
+  pulse:
+    name: Draw and publish the release pulse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write  # push pulse-dark.svg and pulse-light.svg to the "output" branch
+    steps:
+      - name: Check out the profile repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Draw the release pulse
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 .github/pulse/pulse.py
+          --owner "$GITHUB_REPOSITORY_OWNER"
+          --config .github/pulse/config.json
+          --atlas .github/pulse/glyphs.json
+          --out "$RUNNER_TEMP/pulse"
+
+      - name: Publish to the output branch when the images changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/pulse"
+          test -s "$out/pulse-dark.svg" && test -s "$out/pulse-light.svg"
+          if git ls-remote --exit-code --heads origin output >/dev/null 2>&1; then
+            git fetch --depth=1 origin output
+            same=1
+            for f in pulse-dark.svg pulse-light.svg; do
+              if ! git show "FETCH_HEAD:$f" 2>/dev/null | cmp -s - "$out/$f"; then
+                same=0
+              fi
+            done
+            if [ "$same" = "1" ]; then
+              echo "Release pulse unchanged: nothing to publish."
+              exit 0
+            fi
+          fi
+          git switch --orphan output
+          cp "$out/pulse-dark.svg" "$out/pulse-light.svg" .
+          printf '%s\n' "# output" "" "Images drawn by .github/workflows/release-pulse.yml on the main branch." "Do not edit: every run that finds new release data replaces this branch with one commit." > README.md
+          git add pulse-dark.svg pulse-light.svg README.md
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --quiet -m "Release pulse $(date -u +%Y-%m-%d)"
+          git push --force origin output

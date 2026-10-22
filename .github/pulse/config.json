@@ -1,0 +1,31 @@
+{
+  "title": "Release pulse",
+  "months": 12,
+  "repos": [
+    {
+      "repo": "javcms",
+      "label": "JavCMS",
+      "accent": "violet"
+    },
+    {
+      "repo": "avdb-all-in-one",
+      "label": "AVDB All In One",
+      "accent": "amber"
+    },
+    {
+      "repo": "avdbapi-crawler-dooplay",
+      "label": "Crawler for DooPlay",
+      "accent": "cyan"
+    },
+    {
+      "repo": "crawl-avdbapi-vidmov",
+      "label": "Crawler for VidMov",
+      "accent": "mint"
+    },
+    {
+      "repo": "adult-api-crawler-for-wp-script",
+      "label": "Crawler for WP-Script",
+      "accent": "rose"
+    }
+  ]
+}

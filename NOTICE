@@ -1,0 +1,9 @@
+Copyright (c) 2026 AvdbAPI.com
+
+The artwork (assets/), the README text and the release pulse images of this repository are licensed under
+the Creative Commons Attribution 4.0 International licence (LICENSE): you may share and adapt them if you
+credit "AvdbAPI.com" and link the licence.
+
+The scripts in .github/ (pulse.py, config.json, the workflow) are under the MIT licence (.github/pulse/LICENSE).
+Fonts, logos and other third-party material keep their own licences: see assets/CREDITS.md and
+.github/pulse/OFL.txt.
